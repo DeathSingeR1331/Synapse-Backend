@@ -1,4 +1,4 @@
-# src/main.py
+# app/main.py
 
 import asyncio
 import json
@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.sessions import SessionMiddleware 
+from starlette.middleware.sessions import SessionMiddleware
 from starlette_prometheus import PrometheusMiddleware, metrics
 import structlog
 
@@ -119,15 +119,16 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:4173", # Your frontend dev server
-        "http://localhost:3000", # Common alternative dev port
+        "https://synapse-front-end.vercel.app", # Vercel Frontend
+        "http://localhost:4173",               # Your frontend dev server
+        "http://localhost:3000",               # Common alternative dev port
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.add_middleware(SessionMiddleware, secret_key=settings.SESSION_SECRET_KEY or "default-secret-key") 
+app.add_middleware(SessionMiddleware, secret_key=settings.SESSION_SECRET_KEY or "default-secret-key")
 app.add_middleware(PrometheusMiddleware)
 app.add_route("/metrics", metrics)
 
@@ -147,7 +148,7 @@ async def add_context_to_logs(request: Request, call_next):
 # ----------------------------
 # API Routers
 # ----------------------------
-app.include_router(auth.router, prefix="/api/v1", tags=["Authentication"]) 
+app.include_router(auth.router, prefix="/api/v1", tags=["Authentication"])
 app.include_router(processing.router, prefix="/api/v1", tags=["Processing"])
 app.include_router(users.router, prefix="/api/v1/users", tags=["Users"])
 app.include_router(conversation.router, prefix="/api/v1", tags=["Conversations"])

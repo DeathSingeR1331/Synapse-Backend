@@ -46,8 +46,8 @@ COPY ./app /code/app
 # Switch to non-root user
 USER appuser
 
-# Expose port for the app
-EXPOSE 8000
+# Expose port for the app (Railway will set PORT env var)
+EXPOSE $PORT
 
 # Final run command for production
-CMD ["gunicorn", "app.main:app", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8000"]
+CMD ["sh", "-c", "gunicorn app.main:app -k uvicorn.workers.UvicornWorker -b 0.0.0.0:${PORT:-8000}"]

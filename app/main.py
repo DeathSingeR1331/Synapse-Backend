@@ -88,7 +88,7 @@ async def lifespan(app: FastAPI):
 # ----------------------------
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    openapi_url="/api/v1/openapi.json",
     lifespan=lifespan
 )
 
@@ -108,7 +108,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.add_middleware(SessionMiddleware, secret_key=settings.SESSION_SECRET_KEY) 
+app.add_middleware(SessionMiddleware, secret_key=settings.SESSION_SECRET_KEY or "default-secret-key") 
 app.add_middleware(PrometheusMiddleware)
 app.add_route("/metrics", metrics)
 
@@ -128,10 +128,10 @@ async def add_context_to_logs(request: Request, call_next):
 # ----------------------------
 # API Routers
 # ----------------------------
-app.include_router(auth.router, prefix=settings.API_V1_STR, tags=["Authentication"]) 
-app.include_router(processing.router, prefix=settings.API_V1_STR, tags=["Processing"])
-app.include_router(users.router, prefix=f"{settings.API_V1_STR}/users", tags=["Users"])
-app.include_router(conversation.router, prefix=settings.API_V1_STR, tags=["Conversations"])
+app.include_router(auth.router, prefix="/api/v1", tags=["Authentication"]) 
+app.include_router(processing.router, prefix="/api/v1", tags=["Processing"])
+app.include_router(users.router, prefix="/api/v1/users", tags=["Users"])
+app.include_router(conversation.router, prefix="/api/v1", tags=["Conversations"])
 app.include_router(websockets.router)
 
 # ----------------------------

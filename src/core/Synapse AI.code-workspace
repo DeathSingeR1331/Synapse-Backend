@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"path": "../.."
+		},
+		{
+			"path": "../../../Synapse-Worker"
+		},
+		{
+			"path": "../../../Synapse-Infra"
+		},
+		{
+			"path": "../../../Synapse-Frontend"
+		}
+	],
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "Synapse-Frontend"
+	}
+}

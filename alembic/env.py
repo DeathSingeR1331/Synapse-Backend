@@ -1,6 +1,7 @@
 # In Synapse-Backend/alembic/env.py
 
 import asyncio
+import os
 from logging.config import fileConfig
 
 from sqlalchemy import pool
@@ -13,6 +14,7 @@ from alembic import context
 # This is the crucial part: import your Base from your models file.
 # This allows autogenerate to find your models.
 from src.db.models import Base
+from src.core.config import settings
 # --- CUSTOM IMPORTS END ---
 
 
@@ -33,7 +35,11 @@ target_metadata = Base.metadata
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode."""
-    url = config.get_main_option("sqlalchemy.url")
+    # Use the database URL from settings
+    url = settings.DATABASE_DSN or os.getenv("DATABASE_URL")
+    if not url:
+        raise ValueError("No database URL found in settings or DATABASE_URL environment variable")
+    
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -54,6 +60,14 @@ def do_run_migrations(connection: Connection) -> None:
 
 async def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
+    # Use the database URL from settings
+    url = settings.DATABASE_DSN or os.getenv("DATABASE_URL")
+    if not url:
+        raise ValueError("No database URL found in settings or DATABASE_URL environment variable")
+    
+    # Override the config with our database URL
+    config.set_main_option("sqlalchemy.url", url)
+    
     connectable = async_engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",

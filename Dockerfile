@@ -50,4 +50,4 @@ USER appuser
 EXPOSE 8000
 
 # Final run command for production
-CMD ["sh", "-c", "alembic upgrade head && gunicorn app.main:app -k uvicorn.workers.UvicornWorker -b 0.0.0.0:${PORT:-8000} --timeout 120 --keep-alive 2 --max-requests 1000 --max-requests-jitter 100"]
+CMD ["sh", "-c", "set -e && echo 'Starting migrations...' && alembic upgrade head && echo 'Migrations completed successfully!' && echo 'Starting Gunicorn server...' && gunicorn app.main:app -k uvicorn.workers.UvicornWorker -b 0.0.0.0:${PORT:-8000} --timeout 120 --keep-alive 2 --max-requests 1000 --max-requests-jitter 100"]

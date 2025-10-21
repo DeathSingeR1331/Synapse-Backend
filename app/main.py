@@ -62,25 +62,44 @@ async def lifespan(app: FastAPI):
     """Handles application startup and shutdown events."""
     log.info("Application startup")
     
-    # Start background Redis listener
-    listener_task = asyncio.create_task(redis_pubsub_listener())
-    
-    # Initialize the Qdrant collection on startup
-    vector_store = RealVectorStoreService()
-    try:
-        log.info("Initializing Qdrant vector store...")
-        await vector_store.initialize_store()
-        log.info("Qdrant vector store initialized successfully.")
-    except Exception as e:
-        log.error("Failed to initialize Qdrant vector store", exc_info=e)
+    listener_task = None
+    vector_store = None
     
     try:
+        # Start background Redis listener (only if Redis is configured)
+        if settings.REDIS_HOST:
+            listener_task = asyncio.create_task(redis_pubsub_listener())
+            log.info("Redis listener started")
+        else:
+            log.warning("Redis not configured, skipping Redis listener")
+        
+        # Initialize the Qdrant collection on startup (only if Qdrant is configured)
+        if settings.QDRANT_HOST:
+            vector_store = RealVectorStoreService()
+            try:
+                log.info("Initializing Qdrant vector store...")
+                await vector_store.initialize_store()
+                log.info("Qdrant vector store initialized successfully.")
+            except Exception as e:
+                log.error("Failed to initialize Qdrant vector store", exc_info=e)
+        else:
+            log.warning("Qdrant not configured, skipping vector store initialization")
+        
         yield
     finally:
         log.info("Application shutdown")
-        listener_task.cancel()
-        await redis_client.aclose()
-        await vector_store.close()
+        if listener_task:
+            listener_task.cancel()
+        if settings.REDIS_HOST:
+            try:
+                await redis_client.aclose()
+            except Exception as e:
+                log.error("Error closing Redis connection", exc_info=e)
+        if vector_store:
+            try:
+                await vector_store.close()
+            except Exception as e:
+                log.error("Error closing vector store", exc_info=e)
 
 
 # ----------------------------
@@ -140,4 +159,9 @@ app.include_router(websockets.router)
 @app.get("/")
 def read_root():
     """Root endpoint to confirm the API is running."""
-    return {"message": f"Welcome to the {settings.PROJECT_NAME}!"}
+    return {"message": f"Welcome to the {settings.PROJECT_NAME}!", "status": "healthy"}
+
+@app.get("/health")
+def health_check():
+    """Health check endpoint for Railway."""
+    return {"status": "healthy", "service": "synapse-backend"}

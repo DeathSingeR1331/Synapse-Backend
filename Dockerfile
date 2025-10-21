@@ -47,7 +47,7 @@ COPY ./app /code/app
 USER appuser
 
 # Expose port for the app (Railway will set PORT env var)
-EXPOSE $PORT
+EXPOSE 8000
 
 # Final run command for production
-CMD ["sh", "-c", "gunicorn app.main:app -k uvicorn.workers.UvicornWorker -b 0.0.0.0:${PORT:-8000}"]
+CMD ["sh", "-c", "gunicorn app.main:app -k uvicorn.workers.UvicornWorker -b 0.0.0.0:${PORT:-8000} --timeout 120 --keep-alive 2 --max-requests 1000 --max-requests-jitter 100"]

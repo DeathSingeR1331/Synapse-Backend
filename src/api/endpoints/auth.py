@@ -128,27 +128,47 @@ async def google_callback(
     db: Annotated[AsyncSession, Depends(get_db_session)],
     user_service: UserService = Depends()
 ):
-    token = await oauth.google.authorize_access_token(request)
-    user_info = token.get('userinfo')
-    
-    google_provider_id = user_info['sub']
-    user = await user_service.get_user_by_google_id(google_id=google_provider_id, db=db)
+    try:
+        log.info("Google OAuth callback started")
+        
+        # Get the OAuth token
+        token = await oauth.google.authorize_access_token(request)
+        log.info("OAuth token received successfully")
+        
+        user_info = token.get('userinfo')
+        if not user_info:
+            log.error("No userinfo in OAuth token")
+            raise HTTPException(status_code=400, detail="No user info received from Google")
+        
+        log.info("User info received", email=user_info.get('email'))
+        
+        google_provider_id = user_info['sub']
+        user = await user_service.get_user_by_google_id(google_id=google_provider_id, db=db)
 
-    if user:
-        frontend_url = "https://synapse-front-end.vercel.app"
-        redirect_response = RedirectResponse(url=f"{frontend_url}/dashboard")
-        refresh_token = create_refresh_token(data={"sub": str(user.uuid)})
-        redirect_response.set_cookie(
-            key="refresh_token", value=refresh_token, httponly=True, samesite='lax', secure=True, path='/'
+        if user:
+            log.info("Existing user found", user_id=str(user.uuid))
+            frontend_url = "https://synapse-front-end.vercel.app"
+            redirect_response = RedirectResponse(url=f"{frontend_url}/dashboard")
+            refresh_token = create_refresh_token(data={"sub": str(user.uuid)})
+            redirect_response.set_cookie(
+                key="refresh_token", value=refresh_token, httponly=True, samesite='lax', secure=True, path='/'
+            )
+            return redirect_response
+
+        log.info("Creating completion token for new user")
+        completion_token = create_completion_token(
+            data={"google_provider_id": google_provider_id, "email": user_info['email'], "full_name": user_info.get('name')}
         )
-        return redirect_response
-
-    completion_token = create_completion_token(
-        data={"google_provider_id": google_provider_id, "email": user_info['email'], "full_name": user_info.get('name')}
-    )
-    frontend_url = "https://synapse-front-end.vercel.app"
-    redirect_url = f"{frontend_url}/auth/google/callback?token={completion_token}"
-    return RedirectResponse(url=redirect_url)
+        frontend_url = "https://synapse-front-end.vercel.app"
+        redirect_url = f"{frontend_url}/auth/google/callback?token={completion_token}"
+        return RedirectResponse(url=redirect_url)
+        
+    except Exception as e:
+        log.error("Error in Google OAuth callback", exc_info=e, error=str(e))
+        # Redirect to frontend with error
+        frontend_url = "https://synapse-front-end.vercel.app"
+        error_url = f"{frontend_url}/login?error=oauth_error"
+        return RedirectResponse(url=error_url)
 
 
 @router.patch("/complete-profile", response_model=Token)

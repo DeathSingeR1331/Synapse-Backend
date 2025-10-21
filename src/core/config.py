@@ -99,6 +99,7 @@ class Settings(BaseSettings):
     # ---------------- Google OAuth2 ----------------
     GOOGLE_CLIENT_ID: Optional[str] = None
     GOOGLE_CLIENT_SECRET: Optional[str] = None
+    GOOGLE_REDIRECT_URI: Optional[str] = None
     
     # ---------------- Session Management ----------------
     SESSION_SECRET_KEY: Optional[str] = None

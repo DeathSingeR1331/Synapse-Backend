@@ -118,7 +118,7 @@ async def login_for_access_token(
 
 @router.get("/google/login")
 async def google_login(request: Request):
-    redirect_uri = "http://localhost:4173/api/v1/google/callback"
+    redirect_uri = f"{settings.GOOGLE_REDIRECT_URI or 'https://synapse-front-end.vercel.app/auth/google/callback'}"
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 
@@ -135,17 +135,19 @@ async def google_callback(
     user = await user_service.get_user_by_google_id(google_id=google_provider_id, db=db)
 
     if user:
-        redirect_response = RedirectResponse(url="http://localhost:4173/dashboard")
+        frontend_url = "https://synapse-front-end.vercel.app"
+        redirect_response = RedirectResponse(url=f"{frontend_url}/dashboard")
         refresh_token = create_refresh_token(data={"sub": str(user.uuid)})
         redirect_response.set_cookie(
-            key="refresh_token", value=refresh_token, httponly=True, samesite='lax', secure=False, path='/', domain="localhost"
+            key="refresh_token", value=refresh_token, httponly=True, samesite='lax', secure=True, path='/'
         )
         return redirect_response
 
     completion_token = create_completion_token(
         data={"google_provider_id": google_provider_id, "email": user_info['email'], "full_name": user_info.get('name')}
     )
-    redirect_url = f"http://localhost:4173/auth/google/callback?token={completion_token}"
+    frontend_url = "https://synapse-front-end.vercel.app"
+    redirect_url = f"{frontend_url}/auth/google/callback?token={completion_token}"
     return RedirectResponse(url=redirect_url)
 
 

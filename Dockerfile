@@ -39,7 +39,9 @@ COPY --from=builder /usr/local/include /usr/local/include
 COPY --from=builder /usr/local/share /usr/local/share
 
 # Copy application code (Assuming your app code is in a folder named 'app')
+COPY ./src /code/src
 COPY ./app /code/app
+
 
 # Switch to non-root user
 USER appuser

@@ -147,13 +147,12 @@ async def google_callback(
 
         if user:
             log.info("Existing user found", user_id=str(user.uuid))
+            # Create access token for existing user
+            access_token = create_access_token(data={"sub": str(user.uuid)})
             frontend_url = "https://synapse-front-end.vercel.app"
-            redirect_response = RedirectResponse(url=f"{frontend_url}/dashboard")
-            refresh_token = create_refresh_token(data={"sub": str(user.uuid)})
-            redirect_response.set_cookie(
-                key="refresh_token", value=refresh_token, httponly=True, samesite='lax', secure=True, path='/'
-            )
-            return redirect_response
+            # Redirect to callback with access token for consistency
+            redirect_url = f"{frontend_url}/auth/google/callback?access_token={access_token}"
+            return RedirectResponse(url=redirect_url)
 
         log.info("Creating completion token for new user")
         completion_token = create_completion_token(

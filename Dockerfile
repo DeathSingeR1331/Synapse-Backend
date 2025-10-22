@@ -41,6 +41,8 @@ COPY --from=builder /usr/local/share /usr/local/share
 # Copy application code (Assuming your app code is in a folder named 'app')
 COPY ./src /code/src
 COPY ./app /code/app
+COPY ./alembic.ini /code/alembic.ini
+COPY ./alembic /code/alembic
 
 
 # Switch to non-root user
@@ -50,4 +52,4 @@ USER appuser
 EXPOSE 8000
 
 # Final run command for production
-CMD ["sh", "-c", "set -e && echo 'Starting migrations...' && alembic upgrade head && echo 'Migrations completed successfully!' && echo 'Starting Gunicorn server...' && gunicorn app.main:app -k uvicorn.workers.UvicornWorker -b 0.0.0.0:${PORT:-8000} --timeout 120 --keep-alive 2 --max-requests 1000 --max-requests-jitter 100"]
+CMD ["sh", "-c", "set -e && cd /code && echo 'Starting migrations...' && alembic upgrade head && echo 'Migrations completed successfully!' && echo 'Starting Gunicorn server...' && gunicorn app.main:app -k uvicorn.workers.UvicornWorker -b 0.0.0.0:${PORT:-8000} --timeout 120 --keep-alive 2 --max-requests 1000 --max-requests-jitter 100"]

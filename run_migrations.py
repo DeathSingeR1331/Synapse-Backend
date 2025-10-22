@@ -16,13 +16,13 @@ from alembic.config import Config
 from alembic import command
 from src.core.config import settings
 
-async def run_migrations():
+def run_migrations():
     """Run database migrations."""
-    print("🔧 Starting database migrations...")
-    print(f"📊 Database DSN: {settings.DATABASE_DSN}")
+    print("Starting database migrations...")
+    print(f"Database DSN: {settings.DATABASE_DSN}")
     
     if not settings.DATABASE_DSN:
-        print("❌ ERROR: DATABASE_DSN is not configured!")
+        print("ERROR: DATABASE_DSN is not configured!")
         print("Please ensure your environment variables are set correctly.")
         return False
     
@@ -31,16 +31,16 @@ async def run_migrations():
         alembic_cfg = Config("alembic.ini")
         
         # Run migrations
-        print("🚀 Running 'alembic upgrade head'...")
+        print("Running 'alembic upgrade head'...")
         command.upgrade(alembic_cfg, "head")
         
-        print("✅ Migrations completed successfully!")
+        print("Migrations completed successfully!")
         return True
         
     except Exception as e:
-        print(f"❌ Migration failed: {e}")
+        print(f"Migration failed: {e}")
         return False
 
 if __name__ == "__main__":
-    success = asyncio.run(run_migrations())
+    success = run_migrations()
     sys.exit(0 if success else 1)

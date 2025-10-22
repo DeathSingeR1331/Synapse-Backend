@@ -51,5 +51,5 @@ USER appuser
 # Expose port for the app (Railway will set PORT env var)
 EXPOSE 8000
 
-# Final run command for production
-CMD ["sh", "-c", "set -e && cd /code && echo '=== STARTING MIGRATIONS ===' && ls -la && echo 'Alembic files:' && ls -la alembic* && echo 'Running migrations...' && alembic upgrade head && echo '=== MIGRATIONS COMPLETED ===' && echo 'Starting Gunicorn server...' && gunicorn app.main:app -k uvicorn.workers.UvicornWorker -b 0.0.0.0:${PORT:-8000} --timeout 120 --keep-alive 2 --max-requests 1000 --max-requests-jitter 100"]
+# Final run command for production - FORCE MIGRATION
+CMD ["sh", "-c", "set -e && cd /code && echo '=== FORCING MIGRATIONS ===' && echo 'Current directory:' && pwd && echo 'Files in directory:' && ls -la && echo 'Alembic files:' && ls -la alembic* && echo 'Running migrations...' && alembic upgrade head && echo '=== MIGRATIONS COMPLETED ===' && echo 'Starting Gunicorn server...' && gunicorn app.main:app -k uvicorn.workers.UvicornWorker -b 0.0.0.0:${PORT:-8000} --timeout 120 --keep-alive 2 --max-requests 1000 --max-requests-jitter 100"]
